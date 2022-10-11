@@ -8,6 +8,7 @@ AstroUtils = "66020674-cc7a-4e76-9163-0d5ee1962c25"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+StaticArrays = "1"
 julia = "1.8"
 
 [extras]
