@@ -1,6 +1,7 @@
 using AstroEOMs
-using Test
+using Test, SafeTestsets
 
-@testset "AstroEOMs.jl" begin
-    # Write your tests here.
+@time begin
+@time @safetestset "Third body force model tests..." begin include("thirdBodyPerterbationTests.jl") end
+@time @safetestset "MEE tests..." begin include("meeTests.jl") end
 end
