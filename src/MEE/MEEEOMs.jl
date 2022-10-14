@@ -29,7 +29,7 @@ function meeEomNoControl(u::AbstractArray, p::MEEParams, t)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3]) 
     dg      = srtpbmu*(-ap[1]*cos(u[6]) + 
                        wInv*((w + 1.0)*sin(u[6]) + u[3])*ap[2] +
-                       u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
+                       u[2]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
     dh      = 0.5*srtpbmu*s2*wInv*cos(u[6])*ap[3]
     dk      = 0.5*srtpbmu*s2*wInv*sin(u[6])*ap[3]
     dL      = sqrt(mu*u[1])*wbp*wbp + 
@@ -65,7 +65,7 @@ function meeEomNoControl!(du::AbstractArray, u::AbstractArray, p::MEEParams, t)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3]) 
     du[3]   = srtpbmu*(-ap[1]*cos(u[6]) + 
                        wInv*((w + 1.0)*sin(u[6]) + u[3])*ap[2] +
-                       u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
+                       u[2]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
     du[4]   = 0.5*srtpbmu*s2*wInv*cos(u[6])*ap[3]
     du[5]   = 0.5*srtpbmu*s2*wInv*sin(u[6])*ap[3]
     du[6]   = sqrt(mu*u[1])*wbp*wbp + 
@@ -104,7 +104,7 @@ function meeEomControl(u::AbstractArray, p::MEEParams, t, au::AbstractArray)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3]) 
     dg      = srtpbmu*(-apt[1]*cos(u[6]) + 
                        wInv*((w + 1.0)*sin(u[6]) + u[3])*apt[2] +
-                       u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
+                       u[2]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
     dh      = 0.5*srtpbmu*s2*wInv*cos(u[6])*apt[3]
     dk      = 0.5*srtpbmu*s2*wInv*sin(u[6])*apt[3]
     dL      = sqrt(mu*u[1])*wbp*wbp + 
@@ -143,7 +143,7 @@ function meeEomControl!(du::AbstractArray, u::AbstractArray, p::MEEParams, t, au
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3]) 
     du[3]   = srtpbmu*(-apt[1]*cos(u[6]) + 
                        wInv*((w + 1.0)*sin(u[6]) + u[3])*apt[2] +
-                       u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
+                       u[2]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
     du[4]   = 0.5*srtpbmu*s2*wInv*cos(u[6])*apt[3]
     du[5]   = 0.5*srtpbmu*s2*wInv*sin(u[6])*apt[3]
     du[6]   = sqrt(mu*u[1])*wbp*wbp + 

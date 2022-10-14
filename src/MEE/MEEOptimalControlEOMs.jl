@@ -11,7 +11,7 @@ function meeOptimalControlEOMs(u::AbstractVector, p::Tuple{SimpleSpacecraft,MEEP
     # Compute throttling
     S  = meeComputeS(u, nBtλ, sp, mp)
     #ut = 0.5*(1.0 + sign(S))
-    ut = 0.5*(1.0 + tanh(S))
+    ut = 0.5*(1.0 + tanh(S / sw.ϵ))
 
     # Compute acceleration due to thrust
     auMag = ut*sp.tMax*mp.TU*mp.TU / (1000.0 * mp.LU * mp.MU * u[7])

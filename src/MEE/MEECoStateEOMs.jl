@@ -90,19 +90,19 @@ function meeComputeDynamicsPartials(u::AbstractArray, p::MEEParams, t, au)
     # Partials of gdot
     fgr     = -sqrtPmu*cos(u[6])
     fgt     =  sqrtPmu*wInv*((w + 1.0)*sin(u[6]) + u[3])
-    fgn     =  sqrtPmu*wInv*u[3]*(u[4]*sin(u[6]) - u[5]*cos(u[6]))
-    dfgdp   = 0.5*pInv*sqrtPmu*(-cos(u[6])*Δ[1] + wInv*((-u[3]*u[5]*cos(u[6]) + u[3]*u[4]*sin(u[6]))*Δ[3] + 
+    fgn     =  sqrtPmu*wInv*u[2]*(u[4]*sin(u[6]) - u[5]*cos(u[6]))
+    dfgdp   = 0.5*pInv*sqrtPmu*(-cos(u[6])*Δ[1] + wInv*(u[2]*(-u[5]*cos(u[6]) + u[4]*sin(u[6]))*Δ[3] + 
                 (u[3] + (2.0 + u[2]*cos(u[6]))*sin(u[6]) + u[3]*sin(u[6])^2)*Δ[2])) + 
                 fgr*dΔdmee[1,1] + fgt*dΔdmee[2,1] + fgn*dΔdmee[3,1]
-    dfgdf   = wInv*wInv*sqrtPmu*cos(u[6])*(-(u[3] + sin(u[6]))*Δ[2] + u[3]*(u[5]*cos(u[6]) - u[4]*sin(u[6]))*Δ[3]) + 
+    dfgdf   = wInv*wInv*sqrtPmu*(Δ[3]*u[4]*sin(u[6])*(1.0 + u[3]*sin(u[6])) - cos(u[6])*(Δ[2]*u[3] + Δ[3]*u[5] + (Δ[2] + Δ[3]*u[3]*u[5])*sin(u[6]))) +
                 fgr*dΔdmee[1,2] + fgt*dΔdmee[2,2] + fgn*dΔdmee[3,2]
-    dfgdg   = wInv*wInv*sqrtPmu*(cos(u[6])*(u[2] + cos(u[6]))*Δ[2] - (1.0 + u[2]*cos(u[6]))*(u[5]*cos(u[6]) - u[4]*sin(u[6]))*Δ[3]) +
+    dfgdg   = wInv*wInv*sqrtPmu*(Δ[2] - (Δ[2] + Δ[3]*u[2]*u[4])*sin(u[6])^2 + u[2]*cos(u[6])*(Δ[2] + Δ[3]*u[5]*sin(u[6]))) +
                 fgr*dΔdmee[1,3] + fgt*dΔdmee[2,3] + fgn*dΔdmee[3,3]
-    dfgdh   = u[3]*wInv*sqrtPmu*sin(u[6])*Δ[3] + 
+    dfgdh   = u[2]*wInv*sqrtPmu*sin(u[6])*Δ[3] + 
                 fgr*dΔdmee[1,4] + fgt*dΔdmee[2,4] + fgn*dΔdmee[3,4]
-    dfgdk   = -u[3]*wInv*sqrtPmu*cos(u[6])*Δ[3] + 
+    dfgdk   = -u[2]*wInv*sqrtPmu*cos(u[6])*Δ[3] + 
                 fgr*dΔdmee[1,5] + fgt*dΔdmee[2,5] + fgn*dΔdmee[3,5]
-    dfgdL   = wInv*wInv*sqrtPmu*(w*w*sin(u[6])*Δ[1] + u[3]*(u[2]*u[4] + u[3]*u[5] + u[4]*cos(u[6]) + u[5]*sin(u[6]))*Δ[3] +
+    dfgdL   = wInv*wInv*sqrtPmu*(w*w*sin(u[6])*Δ[1] + u[2]*(u[2]*u[4] + u[3]*u[5] + u[4]*cos(u[6]) + u[5]*sin(u[6]))*Δ[3] +
                 (u[2]*u[2]*cos(u[6])^3 + u[2]*sin(u[6])*(u[3] + sin(u[6])) + u[2]*cos(u[6])^2*(3.0 + 2.0*u[3]*sin(u[6])) + 
                 cos(u[6])*(2.0 - u[3]*u[3] + 2.0*u[3]*sin(u[6]) + u[3]*u[3]*sin(u[6])^2))*Δ[2]) + 
                 fgr*dΔdmee[1,6] + fgt*dΔdmee[2,6] + fgn*dΔdmee[3,6]
