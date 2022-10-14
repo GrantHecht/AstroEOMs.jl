@@ -1,14 +1,26 @@
 # MEE dynamics with no control out-of-place with SVector
+#   u :: MEE scalled state
+#   p :: MEE parameters
+#   t :: scalled time
 function meeEomNoControl(u::AbstractArray, p::MEEParams, t)
+    # Compute unscaled time
+    t_us    = unscaleTime(p, t)
+
+    # Compute unscaled state
+    mee_us  = unscaleState(p, u)
+
     # Compute perterbing accelerations
-    ap = meeComputePerterbations(u, p, t)
+    ap = scaleAcceleration(p, meeComputePerterbations(mee_us, p, t_us))
+
+    # Get scaled gravitational parameter
+    mu = getScaledGravityParameter(p)
 
     # Compute requirements
     s2      = 1.0 + u[4]*u[4] + u[5]*u[5]
     w       = 1.0 + u[2]*cos(u[6]) + u[3]*sin(u[6])
     wInv    = 1.0 / w
     wbp     = w / u[1]
-    srtpbmu = sqrt(u[1] / p.mu)
+    srtpbmu = sqrt(u[1] / mu)
 
     # Compute dynamics
     dp      = 2.0*u[1]*wInv*srtpbmu*ap[2]
@@ -20,22 +32,31 @@ function meeEomNoControl(u::AbstractArray, p::MEEParams, t)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
     dh      = 0.5*srtpbmu*s2*wInv*cos(u[6])*ap[3]
     dk      = 0.5*srtpbmu*s2*wInv*sin(u[6])*ap[3]
-    dL      = sqrt(p.mu*u[1])*wbp*wbp + 
+    dL      = sqrt(mu*u[1])*wbp*wbp + 
                 wInv*srtpbmu*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3]
     return SVector(dp,df,dg,dh,dk,dL)
 end
 
 # MEE dynamics with no control in-place
 function meeEomNoControl!(du::AbstractArray, u::AbstractArray, p::MEEParams, t)
+    # Compute unscaled time
+    t_us    = unscaleTime(p, t)
+
+    # Compute unscaled state
+    mee_us  = unscaleState(p, u)
+
     # Compute perterbing accelerations
-    ap = meeComputePerterbations(u, p, t)
+    ap = scaleAcceleration(p,meeComputePerterbations(mee_us, p, t_us))
+
+    # Get scaled gravitational parameter
+    mu = getScaledGravityParameter(p)
 
     # Compute requirements
     s2      = 1.0 + u[4]*u[4] + u[5]*u[5]
     w       = 1.0 + u[2]*cos(u[6]) + u[3]*sin(u[6])
     wInv    = 1.0 / w
     wbp     = w / u[1]
-    srtpbmu = sqrt(u[1] / p.mu)
+    srtpbmu = sqrt(u[1] / mu)
 
     # Compute dynamics
     du[1]   = 2.0*u[1]*wInv*srtpbmu*ap[2]
@@ -47,25 +68,34 @@ function meeEomNoControl!(du::AbstractArray, u::AbstractArray, p::MEEParams, t)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3])
     du[4]   = 0.5*srtpbmu*s2*wInv*cos(u[6])*ap[3]
     du[5]   = 0.5*srtpbmu*s2*wInv*sin(u[6])*ap[3]
-    du[6]   = sqrt(p.mu*u[1])*wbp*wbp + 
+    du[6]   = sqrt(mu*u[1])*wbp*wbp + 
                 wInv*srtpbmu*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*ap[3]
     return nothing
 end
 
 # MEE dynamics w/ control out-of-place with SVector
 function meeEomControl(u::AbstractArray, p::MEEParams, t, au::AbstractArray)
+    # Compute unscaled time
+    t_us    = unscaleTime(p, t)
+
+    # Compute unscaled state
+    mee_us  = unscaleState(p, u)
+
     # Compute perterbing accelerations
-    ap = meeComputePerterbations(u, p, t)
+    ap = scaleAcceleration(p, meeComputePerterbations(mee_us, p, t_us))
 
     # Compute total perterbing accelerations
     apt     = SVector(ap[1] + au[1], ap[2] + au[2], ap[3] + au[3])
+
+    # Compute scaled gravitational parameter
+    mu      = getScaledGravityParameter(p)
 
     # Compute requirements
     s2      = 1.0 + u[4]*u[4] + u[5]*u[5]
     w       = 1.0 + u[2]*cos(u[6]) + u[3]*sin(u[6])
     wInv    = 1.0 / w
     wbp     = w / u[1]
-    srtpbmu = sqrt(u[1] / p.mu)
+    srtpbmu = sqrt(u[1] / mu)
 
     # Compute dynamics
     dp      = 2.0*u[1]*wInv*srtpbmu*apt[2]
@@ -77,25 +107,34 @@ function meeEomControl(u::AbstractArray, p::MEEParams, t, au::AbstractArray)
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
     dh      = 0.5*srtpbmu*s2*wInv*cos(u[6])*apt[3]
     dk      = 0.5*srtpbmu*s2*wInv*sin(u[6])*apt[3]
-    dL      = sqrt(p.mu*u[1])*wbp*wbp + 
+    dL      = sqrt(mu*u[1])*wbp*wbp + 
                 wInv*srtpbmu*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3]
     return SVector(dp,df,dg,dh,dk,dL)
 end
 
 # MEE dynamics w/ control in-place with SVector
-function meeEomControl!(du::AbstractArray, u::AbstractArray, t, au::AbstractArray)
+function meeEomControl!(du::AbstractArray, u::AbstractArray, p::MEEParams, t, au::AbstractArray)
+    # Compute unscaled time
+    t_us    = unscaleTime(p, t)
+
+    # Compute unscaled state
+    mee_us  = unscaleState(p, u)
+
     # Compute perterbing accelerations
-    ap = meeComputePerterbations(u, p, t)
+    ap = scaleAcceleration(p, meeComputePerterbations(mee_us, p, t_us))
 
     # Compute total perterbing accelerations
     apt     = SVector(ap[1] + au[1], ap[2] + au[2], ap[3] + au[3])
+
+    # Get scaled gravitational parameter
+    mu      = getScaledGravityParameter(p)
 
     # Compute requirements
     s2      = 1.0 + u[4]*u[4] + u[5]*u[5]
     w       = 1.0 + u[2]*cos(u[6]) + u[3]*sin(u[6])
     wInv    = 1.0 / w
     wbp     = w / u[1]
-    srtpbmu = sqrt(u[1] / p.mu)
+    srtpbmu = sqrt(u[1] / mu)
 
     # Compute dynamics
     du[1]   = 2.0*u[1]*wInv*srtpbmu*apt[2]
@@ -107,11 +146,12 @@ function meeEomControl!(du::AbstractArray, u::AbstractArray, t, au::AbstractArra
                        u[3]*wInv*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3])
     du[4]   = 0.5*srtpbmu*s2*wInv*cos(u[6])*apt[3]
     du[5]   = 0.5*srtpbmu*s2*wInv*sin(u[6])*apt[3]
-    du[6]   = sqrt(p.mu*u[1])*wbp*wbp + 
+    du[6]   = sqrt(mu*u[1])*wbp*wbp + 
                 wInv*srtpbmu*(u[4]*sin(u[6]) - u[5]*cos(u[6]))*apt[3]
     return nothing
 end
 
+# u is unscaled mee state! 
 function meeComputePerterbations(u::AbstractArray, p::MEEParams, t)
     Δr = 0.0
     Δt = 0.0

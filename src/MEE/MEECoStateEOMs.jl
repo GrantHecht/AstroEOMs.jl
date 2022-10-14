@@ -1,10 +1,19 @@
 
 function meeCoStateEOMs(u::AbstractArray, p::MEEParams, t, au) 
+    # Unscale time
+    t_us    = unscaleTime(p, t)
+
+    # Unscale dynamics state
+    mee_us  = unscaleStateWithMass(p, u)
+
+    # Unscale acceleration
+    au_us   = unscaleAcceleration(p, au)
+
     # Compute partials of MEE EOMs w.r.t. MEE state
-    dfdx = meeComputeDynamicsPartials(u, p, t, au)
+    dfdx = scaleMEEDynamicsPartials(p, meeComputeDynamicsPartials(mee_us, p, t_us, au_us))
 
     # Compute partials of Integral Cost Term w.r.t. MEE state
-    dLdx = computePartialOfCostWrtMEEState(u, p)
+    dLdx = computePartialOfCostWrtMEEState(mee_us, p)
 
     # Compute and return co-state dynamics
     return SVector{7}(-u[8]*dfdx[1,1] - u[9]*dfdx[2,1] - u[10]*dfdx[3,1] - u[11]*dfdx[4,1] - u[12]*dfdx[5,1] - u[13]*dfdx[6,1] - u[14]*dfdx[7,1] - dLdx[1],
@@ -16,6 +25,7 @@ function meeCoStateEOMs(u::AbstractArray, p::MEEParams, t, au)
                       -u[8]*dfdx[1,7] - u[9]*dfdx[2,7] - u[10]*dfdx[3,7] - u[11]*dfdx[4,7] - u[12]*dfdx[5,7] - u[13]*dfdx[6,7] - u[14]*dfdx[7,7] - dLdx[7],)
 end
 
+# All inputs are unscaled
 function meeComputeDynamicsPartials(u::AbstractArray, p::MEEParams, t, au)
     Δ, dΔdmee = begin # Get total perterbations and partials
         # Compute perterbations and partials

@@ -10,15 +10,16 @@ function meeOptimalControlEOMs(u::AbstractVector, p::Tuple{SimpleSpacecraft,MEEP
 
     # Compute throttling
     S  = meeComputeS(u, nBtλ, sp, mp)
-    ut = 0.5*(1.0 + sign(S))
+    #ut = 0.5*(1.0 + sign(S))
+    ut = 0.5*(1.0 + tanh(S))
 
     # Compute acceleration due to thrust
-    auMag = ut*sp.tMax / (1000.0 * u[7])
+    auMag = ut*sp.tMax*mp.TU*mp.TU / (1000.0 * mp.LU * mp.MU * u[7])
     au = SVector(auMag*α[1], auMag*α[2], auMag*α[3])
 
     # Compute derivaties
     dx = meeEomControl(view(u, 1:6), mp, t, au)
-    dm = -ut*sp.tMax / sp.c
+    dm = -ut*sp.tMax*mp.TU / (sp.c * mp.MU)
     dλ = meeCoStateEOMs(u, mp, t, au)
 
     return SVector{14}(dx[1], dx[2], dx[3], dx[4], dx[5], dx[6], dm,
@@ -26,10 +27,13 @@ function meeOptimalControlEOMs(u::AbstractVector, p::Tuple{SimpleSpacecraft,MEEP
 end
 
 function meeComputeOptimalThrustUnitVector(u::AbstractVector, p::MEEParams)
+    # Get scaled gravitational parameter
+    mu = getScaledGravityParameter(p)
+
     # Compute requirements
     w  = 1.0 + u[2]*cos(u[6]) + u[3]*sin(u[6])
     ss = 1.0 + u[4]*u[4] + u[5]*u[5]
-    sqrtPmu = sqrt(u[1] / p.mu)
+    sqrtPmu = sqrt(u[1] / mu)
     wInv    = 1.0 / w
 
     # Compute B matrix
@@ -51,10 +55,10 @@ function meeComputeOptimalThrustUnitVector(u::AbstractVector, p::MEEParams)
 end
 
 function meeComputeS(u, nBtλ, sp::SimpleSpacecraft, mp::MEEParams{MinimumTime, T}) where {T}
-    return sp.c*nBtλ / (1000.0 * u[7]) + u[14] 
+    return sp.c*mp.TU*nBtλ / (1000.0 * mp.LU * u[7]) + u[14] 
 end
 
 function meeComputeS(u, nBtλ, sp::SimpleSpacecraft, mp::MEEParams{MinimumFuel, T}) where {T}
-    return sp.c*nBtλ / (1000.0 * u[7]) + u[14] - 1
+    return sp.c*mp.TU*nBtλ / (1000.0 * mp.LU * u[7]) + u[14] - 1
 end
 
