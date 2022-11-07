@@ -24,9 +24,14 @@ cart0       = SVector(-4.482091357854554e3,5.084589601512431e3,0.0,
 s               = getPosition(meeParams.thirdBodyEphemerides.ephems[1], meeParams.initEpoch)
 dqkdr           = AstroEOMs.computePartialQkWrtR(view(cart0, 1:3), s)
 dqkdrFD         = ForwardDiff.gradient(x -> AstroEOMs.computeQk(x,s), view(cart0, 1:3))
+dqkds           = AstroEOMs.computePartialQkWrtS(view(cart0, 1:3), s)
+dqkdsFD         = ForwardDiff.gradient(x -> AstroEOMs.computeQk(view(cart0, 1:3),x), s)
 #display((dqkdr .- dqkdrFD) ./ eps.(dqkdr))
 for i in eachindex(dqkdr)
     @test (dqkdr[i] - dqkdrFD[i]) / eps(dqkdr[i]) < 10.0
+end
+for i in eachindex(dqkds)
+    @test (dqkds[i] - dqkdsFD[i]) / eps(dqkds[i]) < 10.0
 end
 
 # ===== Compute partials of F(qk)
@@ -39,8 +44,13 @@ end
 
 # ===== Compute partials of inertial acceleration
 ab, dabdcart    = AstroEOMs.computeThirdBodyPerterbationsAndPartials(cart0, 0.0, meeParams)
+dabdt           = AstroEOMs.computeThirdBodyPerterbationTimePartials(cart0, 0.1, meeParams)
 dabdcartFD      = ForwardDiff.jacobian(x -> AstroEOMs.computeThirdBodyPerterbations(x, 0.0, meeParams), cart0)
+dabdtFD         = ForwardDiff.jacobian(t -> AstroEOMs.computeThirdBodyPerterbations(cart0, t[1], meeParams), [0.1])
 #display((dabdcart .- dabdcartFD) ./ eps.(dabdcart))
 for i in eachindex(dabdcart)
     @test (dabdcart[i] - dabdcartFD[i]) / eps(dabdcart[i]) < 10.0
+end
+for i in eachindex(dabdt)
+    @test (dabdt[i] - dabdtFD[i]) / eps(dabdt[i]) < 10.0
 end

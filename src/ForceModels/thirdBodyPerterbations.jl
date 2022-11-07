@@ -31,8 +31,63 @@ function computeThirdBodyPerterbations(cart, t, p::AbstractEOMParams)
         az     -= μ*dk3Inv*(cart[3] + Fqk*s[3])
     end
 
-    # Currently does nothing
     return SVector(ax, ay, az)
+end
+
+function computeThirdBodyPerterbationTimePartials(cartWithMass, t, p)
+    # Compute shifted time
+    ts = p.initEpoch + t
+
+    # Get individual componants of full state vector
+    cart    = view(cartWithMass, 1:6)
+    #m       = cartWithMass[7]
+
+    # Compute third body acceleration time partials
+    daxdt = 0.0
+    daydt = 0.0
+    dazdt = 0.0
+    for i in eachindex(p.thirdBodyEphemerides.targIDs)
+        # Grab current ephemeride
+        ephem   = p.thirdBodyEphemerides.ephems[i]
+
+        # Get gravitational parameter
+        μ   = AstroUtils.getTargetGM(ephem)
+
+        # Get position
+        s   = getPosition(ephem, ts)
+
+        # Get position partial w.r.t. time
+        dsdt = getPositionPartial(ephem, ts)
+
+        # Compute relative position of spacecraft with respect to the third body
+        d   = SVector(cart[1] - s[1], cart[2] - s[2], cart[3] - s[3])
+        dk  = sqrt(d[1]*d[1] + d[2]*d[2] + d[3]*d[3])
+
+        # Compute ddkdt
+        ddkds = SVector(-d[1] / dk, -d[2] / dk, -d[3] / dk)
+        ddkdt = ddkds[1]*dsdt[1] + ddkds[2]*dsdt[2] + ddkds[3]*dsdt[3]
+
+        # Compute Battin's F(q) function
+        Fqk = computeFk(view(cart, 1:3), s)
+
+        # Compute partial of F(q) w.r.t. t 
+        dFqkdt = computePartialFkWrtTime(view(cart, 1:3), s, dsdt)
+
+        # Compute acceleration partials
+        dk      = sqrt(d[1]*d[1] + d[2]*d[2] + d[3]*d[3])
+        dk3     = dk*dk*dk
+        dk4     = dk3*dk
+        dk3Inv  = 1.0 / dk3
+        dk4Inv  = 1.0 / dk4
+        daxdt  -= μ*(-3.0*dk4Inv*ddkdt*(cart[1] + Fqk*s[1]) + 
+                    dk3Inv*(dFqkdt*s[1] + Fqk*dsdt[1]))
+        daydt  -= μ*(-3.0*dk4Inv*ddkdt*(cart[2] + Fqk*s[2]) +
+                    dk3Inv*(dFqkdt*s[2] + Fqk*dsdt[2]))
+        dazdt  -= μ*(-3.0*dk4Inv*ddkdt*(cart[3] + Fqk*s[3]) +
+                    dk3Inv*(dFqkdt*s[3] + Fqk*dsdt[3]))
+    end
+
+    return SVector(daxdt, daydt, dazdt)
 end
 
 # Computes the third body perterbations and partials w.r.t cartesian state (add time partials in future if needed)
@@ -146,6 +201,23 @@ function computePartialQkWrtR(r, s)
                    twoSdsInv * (r[3] - s[3]))
 end
 
+function computePartialQkWrtS(r, s)
+    sds         = s[1]*s[1] + s[2]*s[2] + s[3]*s[3]
+    qnum        = r[1]*(r[1] - 2.0*s[1]) + 
+                  r[2]*(r[2] - 2.0*s[2]) + 
+                  r[3]*(r[3] - 2.0*s[3])
+    twoSdsInv   = 2.0 / sds
+    twoSdsInvSq = 2.0 / (sds*sds)
+    return SVector(-twoSdsInv*r[1] - twoSdsInvSq*qnum*s[1],
+                   -twoSdsInv*r[2] - twoSdsInvSq*qnum*s[2],
+                   -twoSdsInv*r[3] - twoSdsInvSq*qnum*s[3])
+end
+
+function computePartialQkWrtTime(r, s, dsdt)
+    dqds = computePartialQkWrtS(r, s)
+    return dqds[1]*dsdt[1] + dqds[2]*dsdt[2] + dqds[3]*dsdt[3]
+end
+
 function computeFk(qk)
     Fk = qk*(3.0 + 3.0*qk + qk*qk) / (1.0 + sqrt(1.0 + qk)^3)
     return Fk
@@ -165,4 +237,10 @@ function computePartialFkWrtR(r,s)
     dFkdQk = computePartialFkWrtQk(computeQk(r, s))
     dQkdR  = computePartialQkWrtR(r, s)
     return SVector(dFkdQk*dQkdR[1], dFkdQk*dQkdR[2], dFkdQk*dQkdR[3])
+end
+
+function computePartialFkWrtTime(r,s,dsdt)
+    dqdt = computePartialQkWrtTime(r,s,dsdt)
+    dFdq = computePartialFkWrtQk(computeQk(r,s))
+    return dFdq*dqdt
 end
