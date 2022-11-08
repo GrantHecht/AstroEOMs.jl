@@ -1,10 +1,5 @@
 
 function meeMEMFInitializeSwitchingState!(sw, u, t, sp, mp)
-    # Grab parameters
-    sp = integrator.p[1]
-    mp = integrator.p[2]
-    sw = integrator.p[3]
-
     # Compute optimal thrust direction
     α, nBtλ = meeComputeOptimalThrustUnitVector(u, mp)
 
