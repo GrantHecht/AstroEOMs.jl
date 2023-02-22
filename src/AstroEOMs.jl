@@ -3,9 +3,6 @@ module AstroEOMs
 using StaticArrays
 using ForwardDiff
 using LinearAlgebra
-
-using Pkg
-Pkg.add(url="https://github.com/GrantHecht/AstroUtils.jl.git")
 using AstroUtils
 
 include("./AbstractEOMParams.jl")
