@@ -32,7 +32,7 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: 'Run Julia package tests'
+      - name: 'Run Julia package tests'
         runs:
         using: 'composit'
         steps:
