@@ -31,12 +31,37 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
-      - run: |
-        julia --project -e '
-        using Pkg
-        Pkg.add("https://github.com/GrantHecht/AstroUtils.jl.git")'
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      - name: 'Run Julia package tests'
+        runs:
+        using: 'composit'
+        steps:
+          - run: julia --color=yes "$GITHUB_ACTION_PATH"/add_general_registry.jl
+            shell: bash
+            env:
+              JULIA_PKG_SERVER: ""
+          - name: Install depenendencies in ther own environment
+            run: |
+              if VERSION > v"1.8pre"
+                using Pkg
+                Pkg.activate("tests-logger-env"; shared=true)
+                Pkg.add("https://github.com/GrantHecht/AstroUtils.jl.git")
+                Pkg.add(Pkg.PackageSpec(name="GitHubActions", version="0.1")
+              end
+            shell: julia --color=yest {0}
+            if: inputs.annotate == 'true'
+          -run |
+            julia_cmd=( julia --color=yest --depwarn=${{ inputs.depwarn }} --inline=${{ inputs.inline }} --project=${{ inputs.project }} -e 'include(joinpath(ENV["GITHUB_ACTIONS_PATH"], "test_harness.jl"))' )
+            prefix=( ${{ inputs.prefix }} )
+            [[ -n ${prefix[*]} ]] && julia_cmd=( "${prefix[@]}" "${julia_cmd[@]}" )
+            echo "::debug::Executing Julia: ${julia_cmd[*]}"
+            "${julia_cmd[@]}"
+          shell: bash
+          env:
+            ANNOTATE: ${{ inputs.annotate }}
+            COVERAGE: ${{ inputs.coverage }}
+            FORCE_LATEST_COMPATIBLE_VERSION: ${{ inputs.force_latest_compatible_version }}
+            CHECK_BOUNDS: ${{ inputs.check_bounds }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v2
         with:
