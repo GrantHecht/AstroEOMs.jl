@@ -21,6 +21,12 @@ struct MEEParams{costFlag <: CostFlag,tbdt} <: AbstractEOMParams
     # Third body perterbation data
     thirdBodyEphemerides::tbdt
 
+    # == Nonspherical gravity
+    nonsphericalGravity::Bool
+    onlyJ2::Bool
+    J2::Float64     # J2 Coefficnent
+    Rcb::Float64    # Radius of central body
+
     # Problem units
     TU::Float64 # [sec]
     LU::Float64 # [km]
@@ -30,6 +36,9 @@ end
 function MEEParams(initEpoch; μ = 3.986004415e5, primaryBodyID = 399, ref = "J2000",
                    TU = 1.0, LU = 1.0, MU = 1.0,
                    thirdBodyEphemerides = nothing, 
+                   nonsphericalGravity = false,
+                   J2 = 1086.639e-6,
+                   Rcb = 6378.14,
                    costFunction::Type = MinimumFuel)
 
     # Check if we'll be using any perterbations
@@ -42,7 +51,8 @@ function MEEParams(initEpoch; μ = 3.986004415e5, primaryBodyID = 399, ref = "J2
     thirdBodyPerterbations = thirdBodyEphemerides !== nothing
 
     return MEEParams{costFunction, typeof(thirdBodyEphemerides)}(initEpoch, μ, primaryBodyID, ref, 
-        perterbations, thirdBodyPerterbations, thirdBodyEphemerides, TU, LU, MU)
+        perterbations, thirdBodyPerterbations, thirdBodyEphemerides, nonsphericalGravity, true, 
+        J2, Rcb, TU, LU, MU)
 end
 
 # Get scaled gravitational parameter
