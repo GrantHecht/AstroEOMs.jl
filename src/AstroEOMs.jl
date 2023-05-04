@@ -1,9 +1,9 @@
 module AstroEOMs
 
 using StaticArrays
-using AstroUtils
 using ForwardDiff
 using LinearAlgebra
+using AstroUtils
 
 include("./AbstractEOMParams.jl")
 include("./SimpleSpacecraft.jl")

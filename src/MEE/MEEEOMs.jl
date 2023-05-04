@@ -173,6 +173,21 @@ function meeComputePerterbations(u::AbstractArray, p::MEEParams, t)
             Δt     += mee2I[1,2]*atbI[1] + mee2I[2,2]*atbI[2] + mee2I[3,2]*atbI[3]
             Δn     += mee2I[1,3]*atbI[1] + mee2I[2,3]*atbI[2] + mee2I[3,3]*atbI[3]
         end
+        
+        # Compute nonspherical gravity
+        if p.nonsphericalGravity == true
+            if p.onlyJ2 == true
+                # Get J2 perterbation
+                aJ2 = computeJ2Perterbations(u, p)
+
+                # Add to perterbation summation
+                Δr += aJ2[1]
+                Δt += aJ2[2]
+                Δn += aJ2[3]
+            else
+                throw(ErrorException("General non-spherical gravity not implemented."))
+            end
+        end
     end
     # Return perterbing accelerations
     return SVector(Δr, Δt, Δn)
