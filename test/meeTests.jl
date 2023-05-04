@@ -13,7 +13,7 @@ targIDs     = [10,301]
 tbEphems    = Ephemerides(ephemTspan, nPoints, targIDs, 399, "J2000")
 
 # Construct Parameters
-meeParams   = MEEParams(initEpoch; #thirdBodyEphemerides = tbEphems, 
+meeParams   = MEEParams(initEpoch; thirdBodyEphemerides = tbEphems, 
                     LU = 384400.0, MU = 1.0, TU = 24.0*3600.0)
 
 # Create simple spacecraft
