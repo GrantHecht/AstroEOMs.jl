@@ -43,7 +43,7 @@ function MEEParams(initEpoch; μ = 3.986004415e5, primaryBodyID = 399, ref = "J2
 
     # Check if we'll be using any perterbations
     perterbations = false
-    if thirdBodyEphemerides !== nothing # Or other perts (use to set if any perts are on)
+    if thirdBodyEphemerides !== nothing || nonsphericalGravity == true # Or other perts (use to set if any perts are on)
         perterbations = true
     end
 
