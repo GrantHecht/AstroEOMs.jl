@@ -35,20 +35,23 @@ end
 
 function MEEParams(initEpoch; μ = 3.986004415e5, primaryBodyID = 399, ref = "J2000",
                    TU = 1.0, LU = 1.0, MU = 1.0,
+                   thirdBodyPerterbations = true,
                    thirdBodyEphemerides = nothing, 
                    nonsphericalGravity = false,
                    J2 = 1086.639e-6,
                    Rcb = 6378.14,
                    costFunction::Type = MinimumFuel)
 
-    # Check if we'll be using any perterbations
-    perterbations = false
-    if thirdBodyEphemerides !== nothing || nonsphericalGravity == true # Or other perts (use to set if any perts are on)
-        perterbations = true
+    # Check if we have ephemerides if third body perterbations are on
+    if thirdBodyPerterbations == true && thirdBodyEphemerides === nothing
+        throw(ArgumentError("Must provide ephemerides if using third body perturbations."))
     end
 
-    # Set flag to indicate if using 3rd body perterbations
-    thirdBodyPerterbations = thirdBodyEphemerides !== nothing
+    # Check if we'll be using any perterbations
+    perterbations = false
+    if thirdBodyPerterbations == true || nonsphericalGravity == true # Or other perts (use to set if any perts are on)
+        perterbations = true
+    end
 
     return MEEParams{costFunction, typeof(thirdBodyEphemerides)}(initEpoch, μ, primaryBodyID, ref, 
         perterbations, thirdBodyPerterbations, thirdBodyEphemerides, nonsphericalGravity, true, 
